@@ -7,6 +7,7 @@ use App\Services\SentimentAnalyzer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class SentimentController extends Controller
 {
@@ -22,22 +23,35 @@ class SentimentController extends Controller
     {
         $sentiments = Sentiment::where('user_id', Auth::id())->latest()->get();
 
-        // Calculate sentiment counts
         $sentimentCounts = [
             'positive' => $sentiments->where('sentiment', 'positive')->count(),
             'neutral' => $sentiments->where('sentiment', 'neutral')->count(),
             'negative' => $sentiments->where('sentiment', 'negative')->count(),
         ];
 
-        return view('sentiments.index', compact('sentiments', 'sentimentCounts'));
+        // For time series data
+        $groupedSentiments = $sentiments->groupBy(function($item) {
+            return $item->created_at->format('Y-m-d');
+        })->map(function($day) {
+            return [
+                'positive' => $day->where('sentiment', 'positive')->count(),
+                'neutral' => $day->where('sentiment', 'neutral')->count(),
+                'negative' => $day->where('sentiment', 'negative')->count()
+            ];
+        });
+
+        return view('sentiments.index', compact('sentiments', 'sentimentCounts', 'groupedSentiments'));
     }
 
     public function analyze(Request $request)
     {
-        // Validasi teks atau file
         $validator = Validator::make($request->all(), [
-            'text' => 'nullable|string|min:3',
-            'file' => 'nullable|file|mimes:csv,json',
+            'text' => 'nullable|string|min:3|required_without:file',
+            'file' => 'nullable|file|mimes:csv,json|max:2048|required_without:text',
+        ], [
+            'text.required_without' => 'Masukkan teks atau unggah file',
+            'file.required_without' => 'Masukkan teks atau unggah file',
+            'file.max' => 'Ukuran file maksimal 2MB',
         ]);
 
         if ($validator->fails()) {
@@ -46,124 +60,153 @@ class SentimentController extends Controller
                 ->withInput();
         }
 
+        try {
+            $results = [];
+
+            if ($request->hasFile('file')) {
+                $results = $this->processUploadedFile($request->file('file'));
+                return redirect()->route('sentiments.index')
+                    ->with('results', $results)
+                    ->with('source', 'file');
+            }
+
+            if ($request->filled('text')) {
+                $results[] = $this->processManualText($request->input('text'));
+                return redirect()->route('sentiments.index')
+                    ->with('result', $results[0])
+                    ->with('source', 'manual');
+            }
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat memproses: ' . $e->getMessage());
+        }
+    }
+
+    protected function processUploadedFile($file)
+    {
+        $extension = $file->getClientOriginalExtension();
         $results = [];
 
-        // Jika file diunggah
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $extension = $file->getClientOriginalExtension();
+        if ($extension === 'csv') {
+            $results = $this->processCsvFile($file);
+        } elseif ($extension === 'json') {
+            $results = $this->processJsonFile($file);
+        }
 
-            if ($extension === 'csv') {
-                $handle = fopen($file->getPathname(), 'r');
-                $header = fgetcsv($handle);
-                $textIndex = array_search('text', $header);
-                $sentimentIndex = array_search('sentiment', $header);
-                $probabilityIndex = array_search('probability', $header);
+        // Batch insert for better performance
+        if (!empty($results)) {
+            $records = array_map(function ($result) {
+                return [
+                    'user_id' => Auth::id(),
+                    'text' => $result['text'],
+                    'sentiment' => $result['sentiment'],
+                    'probability' => $result['probability'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }, $results);
 
-                while (($data = fgetcsv($handle)) !== false) {
-                    if (!isset($data[$textIndex])) continue;
+            Sentiment::insert($records);
+        }
 
-                    $text = trim($data[$textIndex]);
-                    $sentiment = $data[$sentimentIndex] ?? null;
-                    $probability = $data[$probabilityIndex] ?? 0.8;
+        return $results;
+    }
 
-                    // Normalisasi sentimen
-                    $mappedSentiment = $this->mapSentiment($sentiment);
+    protected function processCsvFile($file)
+    {
+        $results = [];
+        $handle = fopen($file->getPathname(), 'r');
 
-                    $result = $this->sentimentAnalyzer->analyzeText($text, $mappedSentiment, floatval($probability));
+        if (!$handle) {
+            throw new \Exception('Gagal membuka file CSV');
+        }
 
-                    $results[] = $result;
+        $header = fgetcsv($handle);
+        if ($header === false) {
+            fclose($handle);
+            throw new \Exception('File CSV tidak memiliki header');
+        }
 
-                    Sentiment::create([
-                        'user_id' => Auth::id(),
-                        'text' => $text,
-                        'sentiment' => $result['sentiment'],
-                        'probability' => $result['probability']
-                    ]);
-                }
-                fclose($handle);
-            } elseif ($extension === 'json') {
-                $jsonData = json_decode(file_get_contents($file->getPathname()), true);
-                foreach ($jsonData as $item) {
-                    $text = trim($item['text'] ?? '');
-                    if (!$text) continue;
+        // Normalisasi header (case-insensitive)
+        $header = array_map(fn($h) => strtolower(trim($h)), $header);
 
-                    $sentiment = $item['sentiment'] ?? null;
-                    $probability = $item['probability'] ?? 0.8;
+        $textIndex = array_search('text', $header);
+        if ($textIndex === false) {
+            fclose($handle);
+            throw new \Exception('Kolom "text" diperlukan dalam file CSV');
+        }
 
-                    $mappedSentiment = $this->mapSentiment($sentiment);
+        $sentimentIndex = array_search('sentiment', $header);
+        $probabilityIndex = array_search('probability', $header);
 
-                    $result = $this->sentimentAnalyzer->analyzeText($text, $mappedSentiment, floatval($probability));
-                    $results[] = $result;
-
-                    Sentiment::create([
-                        'user_id' => Auth::id(),
-                        'text' => $text,
-                        'sentiment' => $result['sentiment'],
-                        'probability' => $result['probability']
-                    ]);
-                }
+        while (($data = fgetcsv($handle)) !== false) {
+            if (!isset($data[$textIndex])) {
+                continue;
             }
+
+            $text = trim($data[$textIndex]);
+            if ($text === '') {
+                continue;
+            }
+
+            $sentiment = ($sentimentIndex !== false && isset($data[$sentimentIndex]))
+                ? trim($data[$sentimentIndex])
+                : null;
+
+            $probability = ($probabilityIndex !== false && isset($data[$probabilityIndex]))
+                ? floatval($data[$probabilityIndex])
+                : 0.8;
+
+            $results[] = $this->sentimentAnalyzer->analyze($text, $sentiment, $probability);
         }
 
-        // Teks manual
-        if ($request->filled('text')) {
-            $text = $request->input('text');
-            $result = $this->sentimentAnalyzer->analyzeText($text);
-            $results[] = $result;
-
-            Sentiment::create([
-                'user_id' => Auth::id(),
-                'text' => $text,
-                'sentiment' => $result['sentiment'],
-                'probability' => $result['probability']
-            ]);
-        }
-
-        if (count($results) === 1) {
-            return redirect()->route('sentiments.index')->with('result', $results[0]);
-        } else {
-            return redirect()->route('sentiments.index')->with('results', $results);
-        }
+        fclose($handle);
+        return $results;
     }
 
-    // Fungsi normalisasi sentimen
-    private function mapSentiment(?string $sentiment): string
-    {
-        if (!$sentiment) return 'neutral';
 
-        $lowerSentiment = strtolower(trim($sentiment));
-        if (in_array($lowerSentiment, ['positive', 'positif', 'puas'])) {
-            return 'positive';
-        } elseif (in_array($lowerSentiment, ['negative', 'negatif', 'tidak puas'])) {
-            return 'negative';
-        } else {
-            return 'neutral';
+    protected function processJsonFile($file)
+    {
+        $jsonData = json_decode(file_get_contents($file->getPathname()), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception('Format JSON tidak valid');
         }
+
+        if (!is_array($jsonData)) {
+            throw new \Exception('Data JSON harus berupa array');
+        }
+
+        $results = [];
+
+        foreach ($jsonData as $item) {
+            if (!isset($item['text']) || !is_string($item['text'])) continue;
+
+            $text = trim($item['text']);
+            if (empty($text)) continue;
+
+            $sentiment = $item['sentiment'] ?? null;
+            $probability = isset($item['probability']) ? floatval($item['probability']) : 0.8;
+
+            $results[] = $this->sentimentAnalyzer->analyze($text, $sentiment, $probability);
+        }
+
+        return $results;
     }
 
-    public function analyzeText(string $text, ?string $givenSentiment = null, float $givenProbability = 0.8): array
+    protected function processManualText($text)
     {
-        if ($givenSentiment) {
-            // Gunakan sentimen yang sudah disediakan
-            return [
-                'text' => $text,
-                'sentiment' => $givenSentiment,
-                'probability' => $givenProbability
-            ];
-        }
+        $result = $this->sentimentAnalyzer->analyze($text);
 
-        // Jika tidak ada sentimen, lakukan prediksi otomatis
-        // Misalnya menggunakan model AI atau rule-based
-        // Contoh dummy:
-        $sentiment = 'positive'; // Ganti dengan logic sebenarnya
-        $probability = 0.95; // Ganti dengan probabilitas sebenarnya
-
-        return [
+        Sentiment::create([
+            'user_id' => Auth::id(),
             'text' => $text,
-            'sentiment' => $sentiment,
-            'probability' => $probability
-        ];
+            'sentiment' => $result['sentiment'],
+            'probability' => $result['probability']
+        ]);
+
+        return $result;
     }
 
     public function dashboard()

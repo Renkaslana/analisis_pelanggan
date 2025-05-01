@@ -1,164 +1,125 @@
-<!-- resources/views/layouts/app.blade.php -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentiment Analyzer - @yield('title', 'Prediksi Kepuasan Pelanggan')</title>
-    <meta name="description" content="Analisis sentimen untuk memahami tingkat kepuasan pelanggan berdasarkan feedback">
-    <!-- Tailwind CSS -->
+    <title>@yield('title', 'Sistem Prediksi Kepuasan Pelanggan')</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        .animated-gradient {
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-        }
-
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .glass-card {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        .glow-positive {
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-        }
-
-        .glow-neutral {
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
-        }
-
-        .glow-negative {
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
-        }
-
-        @media print {
-            @page {
-                size: A4;
-                margin: 1cm;
-            }
-
-            body {
-                background: white !important;
-                color: black !important;
-            }
-
-            .print-hidden {
-                display: none !important;
-            }
-
-            .print-break-inside-avoid {
-                break-inside: avoid;
-            }
-
-            .print-break-before-page {
-                break-before: page;
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        dark: '#1F2937',
+                    }
+                }
             }
         }
-    </style>
+    </script>
 </head>
-<body>
-    <div class="flex min-h-screen flex-col">
-        <!-- Header -->
-        <header class="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur">
-            <div class="container mx-auto flex h-16 items-center justify-between px-4">
-                <div class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-blue-600">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M9.082 16.007c.36.18.711.327 1.082.429m3.754-1.422c.36.18.711.327 1.082.429M9.082 7.007c.36-.18.711-.327 1.082-.429m4.836 1.85a5.5 5.5 0 0 1-1.082-.429"/>
-                        <path d="M7 16.5c0-1 1.5-2 3-2s2.5 1 2.5 2m2-6.5c0-1 1.5-2 3-2s2.5 1 2.5 2"/>
-                    </svg>
-                    <a href="{{ route('sentiments.index') }}" class="flex items-center gap-1">
-                        <span class="font-bold text-lg hidden sm:inline-block">Sentiment Analyzer</span>
-                    </a>
-                </div>
-                <nav class="flex items-center gap-2">
-                    <a href="https://github.com/yourusername/sentiment-analyzer" target="_blank" rel="noopener noreferrer" class="p-2 rounded-full hover:bg-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/>
-                            <path d="M9 18c-4.51 2-5-2-7-2"/>
+<body class="font-sans bg-gray-50">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <svg class="h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span class="sr-only">GitHub</span>
-                    </a>
-                    <a href="{{ route('sentiments.dashboard') }}" class="p-2 rounded-full hover:bg-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2"/>
-                            <path d="M3 9h18"/>
-                            <path d="M9 21V9"/>
-                        </svg>
-                        <span class="sr-only">Dashboard</span>
-                    </a>
-                    
-                    <!-- User Dropdown -->
-                    <div class="relative ml-3">
-                        <div>
-                            <button type="button" class="flex items-center gap-x-1 text-sm font-medium text-gray-700 hover:text-gray-800" id="user-menu-button" aria-expanded="false" aria-haspopup="true" onclick="document.getElementById('user-dropdown').classList.toggle('hidden')">
-                                <span>{{ Auth::user()->name }}</span>
-                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div id="user-dropdown" class="hidden absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1">
-                                    Logout
-                                </button>
-                            </form>
-                        </div>
+                        <span class="ml-2 text-xl font-bold text-dark">SuaraPelanggan</span>
                     </div>
-                </nav>
-            </div>
-        </header>
-
-        <!-- Main Content -->
-        <main class="flex-1 animated-gradient py-10 px-4">
-            <div class="container mx-auto max-w-6xl">
-                @yield('content')
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="border-t bg-white">
-            <div class="container mx-auto flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
-                <div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-blue-600">
-                        <circle cx="12" cy="12" r="10"/>
-                        <path d="M9.082 16.007c.36.18.711.327 1.082.429m3.754-1.422c.36.18.711.327 1.082.429M9.082 7.007c.36-.18.711-.327 1.082-.429m4.836 1.85a5.5 5.5 0 0 1-1.082-.429"/>
-                        <path d="M7 16.5c0-1 1.5-2 3-2s2.5 1 2.5 2m2-6.5c0-1 1.5-2 3-2s2.5 1 2.5 2"/>
-                    </svg>
-                    <p class="text-center text-sm leading-loose md:text-left">
-                        &copy; {{ date('Y') }} Sentiment Analyzer. All rights reserved.
-                    </p>
                 </div>
-                <div class="flex gap-4">
-                    <a href="#" class="text-sm font-medium underline underline-offset-4">Terms</a>
-                    <a href="#" class="text-sm font-medium underline underline-offset-4">Privacy</a>
-                    <a href="#" class="text-sm font-medium underline underline-offset-4">About</a>
+                <div class="flex items-center space-x-4">
+                    @guest
+                        <a href="{{ route('login') }}"
+                            class="px-4 py-2 rounded-md text-sm font-medium text-dark hover:text-primary transition">Masuk</a>
+                        <a href="{{ route('register') }}"
+                            class="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium hover:bg-opacity-90 transition">Daftar</a>
+                    @else
+                        <a href="{{ route('sentiments.index') }}"
+                            class="px-4 py-2 bg-secondary text-white rounded-md text-sm font-medium hover:bg-opacity-90 transition">Aplikasi</a>
+                        <form action="{{ route('logout') }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit"
+                                class="px-4 py-2 rounded-md text-sm font-medium text-dark hover:text-primary transition">Logout</button>
+                        </form>
+                    @endguest
                 </div>
             </div>
-        </footer>
-    </div>
+        </div>
+    </nav>
 
-    @stack('scripts')
+    <!-- Main Content -->
+    <main>
+        @yield('content')
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">SuaraPelanggan</h3>
+                    <p class="text-gray-400">Sistem prediksi kepuasan pelanggan untuk membantu bisnis Anda tumbuh lebih baik.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Tautan Cepat</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition">Beranda</a></li>
+                        <li><a href="#features" class="text-gray-400 hover:text-white transition">Fitur</a></li>
+                        <li><a href="{{ route('login') }}" class="text-gray-400 hover:text-white transition">Masuk</a></li>
+                        <li><a href="{{ route('register') }}" class="text-gray-400 hover:text-white transition">Daftar</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Kontak</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li>Email: info@SuaraPelanggan.com</li>
+                        <li>Telepon: (021) 1234-5678</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Sosial Media</h4>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84">
+                                </path>
+                            </svg>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fill-rule="evenodd"
+                                    d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; {{ date('Y') }} SuaraPelanggan. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
 </body>
 </html>

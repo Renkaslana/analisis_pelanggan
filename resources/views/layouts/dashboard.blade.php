@@ -1,106 +1,115 @@
-<!-- resources/views/layouts/dashboard.blade.php -->
 <!DOCTYPE html>
-<html lang="en" class="bg-gray-900 text-white">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') - Sentiment Analyzer</title>
+    <title>@yield('title', 'Dashboard - Sistem Prediksi Kepuasan Pelanggan')</title>
 
-    <!-- Tailwind & Alpine.js -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Font + Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Icons (Feather Icons) -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#10B981',
+                        dark: '#1F2937',
+                        light: '#F3F4F6'
+                    }
+                }
+            }
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
-        }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            transition: transform 0.2s ease;
-        }
-        .glow-positive {
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
-        }
-        .glow-negative {
-            box-shadow: 0 0 15px rgba(248, 113, 113, 0.4);
-        }
-        .glow-neutral {
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
-        }
-    </style>
+    </script>
 </head>
-<body class="bg-gradient-to-br from-gray-900 via-gray-800 to-indigo-900 min-h-screen">
+<body class="bg-gray-100 min-h-screen">
+
+    <!-- Sidebar & Navbar -->
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <aside class="w-64 bg-gray-800/80 backdrop-blur-md shadow-lg hidden md:block">
-            <div class="p-6 text-center">
-                <h1 class="text-2xl font-bold text-white">SentimenKu</h1>
-                <p class="text-sm text-gray-400 mt-1">Analisis Kepuasan Pelanggan</p>
+        <aside class="w-64 bg-white shadow-md hidden md:block">
+            <div class="p-6 text-center border-b border-gray-200">
+                <h2 class="text-xl font-bold text-primary">SuaraPelanggan</h2>
+                <p class="text-sm text-gray-500">Sistem Prediksi Kepuasan Pelanggan</p>
             </div>
             <nav class="mt-6 px-4 space-y-2">
-                <a href="{{ route('sentiments.index') }}"
-                   class="flex items-center gap-3 px-4 py-2 rounded-lg text-white hover:bg-indigo-600 transition-colors {{ request()->routeIs('sentiments.index') ? 'bg-indigo-500' : '' }}">
-                    <svg data-feather="message-circle" class="w-5 h-5"></svg>
-                    <span>Input Analisis</span>
+                <a href="{{ route('sentiments.index') }}" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition @if(request()->routeIs('sentiments.index')) bg-primary text-white @endif">
+                    Beranda
                 </a>
-                <a href="{{ route('sentiments.dashboard') }}"
-                   class="flex items-center gap-3 px-4 py-2 rounded-lg text-white hover:bg-blue-600 transition-colors {{ request()->routeIs('sentiments.dashboard') ? 'bg-blue-500' : '' }}">
-                    <svg data-feather="bar-chart-2" class="w-5 h-5"></svg>
-                    <span>Dashboard</span>
+                <a href="{{ route('sentiments.dashboard') }}" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition @if(request()->routeIs('sentiments.dashboard')) bg-primary text-white @endif">
+                    Dashboard
                 </a>
-                <a href="{{ route('sentiments.history') }}"
-                   class="flex items-center gap-3 px-4 py-2 rounded-lg text-white hover:bg-purple-600 transition-colors {{ request()->routeIs('sentiments.history') ? 'bg-purple-500' : '' }}">
-                    <svg data-feather="clock" class="w-5 h-5"></svg>
-                    <span>Riwayat Analisis</span>
+                <a href="{{ route('sentiments.history') }}" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition @if(request()->routeIs('sentiments.history')) bg-primary text-white @endif">
+                    Riwayat Analisis
                 </a>
+                <a href="#" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">Profil</a>
+                <a href="#" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">Pengaturan</a>
+                <form action="{{ route('logout') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="w-full text-left px-4 py-2 rounded-md hover:bg-red-500 hover:text-white text-sm text-gray-600 transition">
+                        Logout
+                    </button>
+                </form>
             </nav>
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 overflow-auto">
-            <header class="bg-white/10 backdrop-blur-md border-b border-white/20 sticky top-0 z-10">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <h2 class="text-xl font-semibold">@yield('title')</h2>
-                    <div class="flex items-center gap-4">
-                        <div class="hidden sm:flex items-center text-sm text-white/80">
-                            Hai, {{ Auth::user()->name ?? 'User' }}
-                        </div>
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="text-sm text-white/80 hover:text-white">
-                                Keluar
-                            </button>
-                        </form>
-                    </div>
-                </div>
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="flex justify-between items-center p-4 bg-white shadow-sm md:hidden">
+                <h1 class="text-lg font-semibold">Dashboard</h1>
+                <button id="menuButton" class="text-gray-600 focus:outline-none">
+                    <!-- Hamburger Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
             </header>
 
-            <main class="p-6 max-w-7xl mx-auto">
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden bg-white shadow-md p-4 space-y-2">
+                <a href="{{ route('sentiments.index') }}" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">Beranda</a>
+                <a href="{{ route('sentiments.dashboard') }}" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">Dashboard</a>
+                <a href="{{ route('sentiments.history') }}" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">Riwayat</a>
+                <a href="#" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">Profil</a>
+                <a href="#" class="block px-4 py-2 rounded-md hover:bg-primary hover:text-white transition">Pengaturan</a>
+                <form action="{{ route('logout') }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="w-full text-left px-4 py-2 rounded-md hover:bg-red-500 hover:text-white text-sm text-gray-600 transition">
+                        Logout
+                    </button>
+                </form>
+            </div>
+
+            <!-- Page Content -->
+            <main class="p-4 overflow-auto flex-1 bg-gray-100">
                 @yield('content')
             </main>
 
-            <footer class="bg-gray-800/30 text-center text-white/50 py-4 text-sm mt-8">
-                &copy; {{ date('Y') }} SentimenKu - All rights reserved.
+            <!-- Footer -->
+            <footer class="p-4 text-center text-sm text-gray-500 bg-white border-t">
+                &copy; {{ date('Y') }} SuaraPelanggan. Hak Cipta Dilindungi.
             </footer>
         </div>
     </div>
 
-    <!-- Feather Icons -->
+    <!-- JS for Mobile Menu -->
     <script>
-        feather.replace();
-    </script>
+        const menuButton = document.getElementById('menuButton');
+        const mobileMenu = document.getElementById('mobileMenu');
 
-    <!-- Scripts Yield -->
+        menuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

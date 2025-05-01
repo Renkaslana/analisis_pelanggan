@@ -1,249 +1,408 @@
-<!-- resources/views/sentiments/index.blade.php -->
+{{-- resources/views/sentiments/index.blade.php --}}
+
 @extends('layouts.dashboard')
-
-@section('title', 'Analisis Sentimen')
-
+@section('title', 'Beranda - Dashboard')
 @section('content')
-    <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">Prediksi Kepuasan Pelanggan</h1>
-        <p class="text-white/80 max-w-2xl mx-auto">
-            Analisis sentimen untuk memahami tingkat kepuasan pelanggan Anda berdasarkan feedback yang diberikan
-        </p>
-    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">Selamat Datang di Dashboard Analisis Sentimen</h2>
+            <p class="text-gray-600 mt-2">Kelola analisis teks dan pantau kepuasan pelanggan secara real-time.</p>
+        </div>
 
-    <!-- Navigasi -->
-    <div class="bg-white/20 backdrop-blur-md rounded-xl p-1 mb-8 inline-flex">
-        <a href="{{ route('sentiments.index') }}"
-           class="px-4 py-2 rounded-lg {{ request()->routeIs('sentiments.index') ? 'bg-white text-blue-600 shadow-lg' : 'text-white' }} transition-all duration-300 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 12h12M8 8l-4 4 4 4"/>
-            </svg>
-            Input Sentimen
-        </a>
-        <a href="{{ route('sentiments.dashboard') }}"
-           class="px-4 py-2 rounded-lg {{ request()->routeIs('sentiments.dashboard') ? 'bg-white text-blue-600 shadow-lg' : 'text-white' }} transition-all duration-300 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                <path d="M3 9h18"/>
-                <path d="M9 21V9"/>
-            </svg>
-            Dashboard
-        </a>
-        <a href="{{ route('sentiments.history') }}"
-           class="px-4 py-2 rounded-lg {{ request()->routeIs('sentiments.history') ? 'bg-white text-blue-600 shadow-lg' : 'text-white' }} transition-all duration-300 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 3v18h18"/>
-                <path d="m19 9-5 5-4-4-3 3"/>
-            </svg>
-            Riwayat Analisis
-        </a>
-    </div>
+        <!-- Stats Cards -->
+        @include('sentiments.partials.stats-cards', compact('sentimentCounts', 'sentiments'))
 
-    <div class="grid md:grid-cols-2 gap-8">
-        <div class="glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
-                <h2 class="text-xl font-bold">Analisis Sentimen</h2>
-                <p class="text-white/80">Masukkan feedback pelanggan atau upload file CSV/JSON</p>
-            </div>
-            <div class="p-6">
-
-                <!-- Formulir Input -->
-                <form action="{{ route('sentiments.analyze') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-
-                    <div class="mb-4">
-                        <label for="text" class="block text-sm font-medium text-white mb-2">Input Teks Manual</label>
-                        <textarea name="text" id="text" rows="5"
-                            class="w-full rounded-md border-2 border-indigo-100 focus:border-indigo-300 p-3 transition-all"
-                            placeholder="Masukkan feedback pelanggan di sini...">{{ old('text') }}</textarea>
-                        @error('text')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="file" class="block text-sm font-medium text-white mb-2">Upload File (CSV/JSON)</label>
-                        <input type="file" name="file" id="file"
-                               class="w-full text-sm text-white file:rounded file:px-4 file:py-2 file:bg-indigo-600 file:text-white file:border-none hover:file:bg-indigo-700 transition-colors cursor-pointer"
-                               accept=".csv,.json">
-                        @error('file')
-                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="mt-2 text-xs text-white bg-black/30 px-3 py-1 rounded inline-block max-w-xs truncate"
-                         id="file-preview">
-                        Tidak ada file dipilih
-                    </div>
-
-                    <div class="flex justify-end mt-6">
-                        <button type="submit"
-                                class="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-4 py-2 rounded-md transition-all duration-300 shadow-md flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m22 2-7 20-4-9-9-4Z"/>
-                                <path d="M22 2 11 13"/>
-                            </svg>
-                            <span>Analisis Sentimen</span>
-                        </button>
-                    </div>
-                </form>
-
-                <!-- Info Format Data -->
-                <div class="mt-6 p-4 bg-white/10 rounded-md border border-white/20">
-                    <h3 class="font-semibold text-white mb-3">Format Data yang Didukung:</h3>
-                    <ul class="list-disc pl-5 text-white/70 space-y-1">
-                        <li><strong>CSV:</strong> Kolom wajib: <code>"text"</code>, opsional: <code>"sentiment"</code>, <code>"probability"</code></li>
-                        <li><strong>JSON:</strong> Format array objek:
-                            <pre class="text-xs text-gray-300 mt-2 bg-black/50 p-2 rounded overflow-x-auto">
-[
-    {
-        "text": "produknya bagus",
-        "sentiment": "positive",
-        "probability": 0.96
-    },
-    {
-        "text": "tidak puas dengan layanan"
-    }
-]
-                            </pre>
-                        </li>
-                    </ul>
+        <!-- Chart Section -->
+        <div class="mb-10 bg-white p-6 rounded-lg shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-dark">Visualisasi Data Sentimen</h3>
+                <div class="flex space-x-2">
+                    <button id="pieChartBtn"
+                        class="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-sm font-medium chart-type-btn active"
+                        data-type="pie">
+                        Pie Chart
+                    </button>
+                    <button id="barChartBtn"
+                        class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm font-medium chart-type-btn"
+                        data-type="bar">
+                        Bar Chart
+                    </button>
+                    <button id="lineChartBtn"
+                        class="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-sm font-medium chart-type-btn"
+                        data-type="line">
+                        Line Chart
+                    </button>
                 </div>
+            </div>
+            <div class="chart-container relative" style="height: 400px;">
+                <canvas id="sentimentChart"></canvas>
+            </div>
 
+            <!-- Date Range Filter -->
+            <div class="mt-6 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                <div class="w-full sm:w-1/3">
+                    <label for="dateRange" class="block text-sm font-medium text-gray-700 mb-1">Rentang Waktu</label>
+                    <select id="dateRange"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">Semua Data</option>
+                        <option value="today">Hari Ini</option>
+                        <option value="week">Minggu Ini</option>
+                        <option value="month">Bulan Ini</option>
+                        <option value="year">Tahun Ini</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div id="customDateRange" class="hidden w-full sm:flex space-x-4">
+                    <div class="w-1/2">
+                        <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Dari Tanggal</label>
+                        <input type="date" id="startDate"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="w-1/2">
+                        <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">Sampai Tanggal</label>
+                        <input type="date" id="endDate"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Hasil Analisis Tunggal -->
-        @if(session('result'))
-            @php
-                $result = session('result');
-                $glowClass = $result['sentiment'] === 'positive' ? 'glow-positive' : ($result['sentiment'] === 'negative' ? 'glow-negative' : 'glow-neutral');
-                $headerClass = $result['sentiment'] === 'positive' ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white' : ($result['sentiment'] === 'negative' ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white' : 'bg-gradient-to-r from-amber-400 to-yellow-500 text-white');
-                $iconBgClass = $result['sentiment'] === 'positive' ? 'bg-green-100 text-green-600' : ($result['sentiment'] === 'negative' ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600');
-                $barClass = $result['sentiment'] === 'positive' ? 'bg-gradient-to-r from-green-400 to-green-600' : ($result['sentiment'] === 'negative' ? 'bg-gradient-to-r from-red-400 to-red-600' : 'bg-gradient-to-r from-yellow-400 to-yellow-600');
-                $badgeClass = $result['sentiment'] === 'positive' ? 'bg-green-500' : ($result['sentiment'] === 'negative' ? 'bg-red-500' : 'bg-yellow-500');
-                $sentimentText = $result['sentiment'] === 'positive' ? 'Positif (Puas)' : ($result['sentiment'] === 'negative' ? 'Negatif (Tidak Puas)' : 'Netral');
-                $interpretationText = $result['sentiment'] === 'positive' ? 'Pelanggan menunjukkan kepuasan terhadap produk atau layanan. Umpan balik ini sangat positif.' : ($result['sentiment'] === 'negative' ? 'Pelanggan tidak puas dengan pengalaman mereka. Perlu tindak lanjut untuk perbaikan layanan.' : 'Pelanggan memiliki pendapat netral. Ada ruang untuk peningkatan.');
-            @endphp
+        <!-- Notification Section -->
+        @if (session('error'))
+            <x-alert type="danger">{{ session('error') }}</x-alert>
+        @endif
 
-            <div class="glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl {{ $glowClass }}">
-                <div class="{{ $headerClass }} p-6">
-                    <h2 class="text-xl font-bold">Hasil Analisis</h2>
+        @if (session('result'))
+            <div class="mt-6 rounded-md bg-green-50 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-green-800">Hasil Analisis</h3>
+                        <div class="mt-2 text-sm text-green-700">
+                            @if (session('source') == 'manual')
+                                <p>Dianalisis dari teks yang dimasukkan secara manual.</p>
+                            @else
+                                <p>Dianalisis dari file CSV/JSON yang diunggah.</p>
+                            @endif
+                            <p>
+                                Sentimen: <strong>{{ ucfirst(session('result')['sentiment']) }}</strong> |
+                                Probabilitas: {{ round(session('result')['probability'] * 100, 2) }}%
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="p-6">
-                    <div class="flex flex-col gap-6">
-                        <div class="flex items-center gap-4">
-                            <div class="p-4 rounded-full {{ $iconBgClass }}">
-                                @if($result['sentiment'] === 'positive')
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                                        <line x1="9" x2="9.01" y1="9" y2="9"/>
-                                        <line x1="15" x2="15.01" y1="9" y2="9"/>
-                                    </svg>
-                                @elseif($result['sentiment'] === 'negative')
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="8" x2="16" y1="15" y2="15"/>
-                                        <line x1="9" x2="9.01" y1="9" y2="9"/>
-                                        <line x1="15" x2="15.01" y1="9" y2="9"/>
-                                    </svg>
+            </div>
+        @endif
+
+        @if (session('results'))
+            <div class="mt-6 rounded-md bg-green-50 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-green-800">Analisis Batch Selesai</h3>
+                        <div class="mt-2 text-sm text-green-700">
+                            <p>Berhasil menganalisis {{ count(session('results')) }} data.</p>
+                            <p>
+                                @if (count(session('results')) > 1)
+                                    Input ini berasal dari file CSV/JSON.
                                 @else
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="8" x2="16" y1="12" y2="12"/>
-                                        <line x1="9" x2="9.01" y1="9" y2="9"/>
-                                        <line x1="15" x2="15.01" y1="9" y2="9"/>
-                                    </svg>
+                                    Input ini berasal dari teks manual.
                                 @endif
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium mb-1">Sentimen:</p>
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $badgeClass }} text-white">
-                                    {{ $sentimentText }}
-                                </span>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium mb-2">Tingkat Kepercayaan:</p>
-                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                                <div class="h-3 rounded-full {{ $barClass }}" style="width: {{ round($result['probability'] * 100) }}%;"></div>
-                            </div>
-                            <p class="text-xs text-right mt-1 font-bold">{{ round($result['probability'] * 100) }}%</p>
-                        </div>
-                        <div class="mt-2 p-4 rounded-lg bg-gray-50">
-                            <p class="text-sm font-medium mb-2">Interpretasi:</p>
-                            <p class="text-sm">{{ $interpretationText }}</p>
+                            </p>
+                            <a href="{{ route('sentiments.history') }}"
+                                class="mt-2 inline-flex items-center text-green-600 hover:underline">
+                                Lihat detail di riwayat
+                                <svg class="ml-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                    </path>
+                                </svg>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
         @endif
 
-        <!-- Hasil Batch Upload -->
-        @if(session('results'))
-            <div class="md:col-span-2 glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
-                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
-                    <h2 class="text-xl font-bold">Hasil Analisis Batch</h2>
-                    <p class="text-white/80">Daftar hasil analisis dari file yang diupload</p>
+        <!-- Upload Form -->
+        <div class="mt-10 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">Lakukan Analisis Baru</h3>
+            <form action="{{ route('sentiments.analyze') }}" method="POST" enctype="multipart/form-data" id="analyzeForm"
+                class="space-y-6">
+                @csrf
+                <!-- Text Input -->
+                <div>
+                    <label for="text" class="block text-sm font-medium text-gray-700 mb-1">Masukkan Ulasan atau
+                        Teks</label>
+                    <textarea name="text" id="text" rows="4"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                        placeholder="Contoh: Saya sangat puas dengan layanan ini..."></textarea>
                 </div>
-                <div class="p-6">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th scope="col" class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">No</th>
-                                    <th scope="col" class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Umpan Balik</th>
-                                    <th scope="col" class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Sentimen</th>
-                                    <th scope="col" class="px-4 py-2 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Kepercayaan</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach(session('results') as $key => $res)
-                                    <tr class="hover:bg-gray-50 transition-colors">
-                                        <td class="px-4 py-2 text-sm text-gray-500">{{ $key+1 }}</td>
-                                        <td class="px-4 py-2 text-sm text-gray-900">{{ \Illuminate\Support\Str::limit($res['text'], 60, '...') }}</td>
-                                        <td class="px-4 py-2">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                {{ $res['sentiment'] === 'positive' ? 'bg-green-500 text-white' :
-                                                   ($res['sentiment'] === 'negative' ? 'bg-red-500 text-white' : 'bg-yellow-500 text-white') }}">
-                                                {{ ucwords($res['sentiment']) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-2">
-                                            <div class="flex items-center gap-2">
-                                                <div class="w-16 bg-gray-200 rounded-full h-2">
-                                                    <div class="h-2 rounded-full
-                                                        {{ $res['sentiment'] === 'positive' ? 'bg-green-500' :
-                                                           ($res['sentiment'] === 'negative' ? 'bg-red-500' : 'bg-yellow-500') }}"
-                                                     style="width: {{ round($res['probability'] * 100) }}%;">
-                                                    </div>
-                                                </div>
-                                                <span>{{ round($res['probability'] * 100) }}%</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                <!-- Divider -->
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">ATAU</span>
                     </div>
                 </div>
-            </div>
-        @endif
+                <!-- File Upload -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unggah CSV / JSON</label>
+                    <input type="file" name="file" accept=".csv,.json" id="fileInput"
+                        class="block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-primary file:text-white
+                        hover:file:bg-opacity-90
+                        focus:outline-none">
+                    <p class="mt-1 text-xs text-gray-500">Ukuran maksimal 2MB</p>
+                </div>
+
+                <!-- Preview Section -->
+                <div id="filePreview" class="mt-4 hidden">
+                    <h4 class="text-lg font-medium text-gray-700">Pratinjau File:</h4>
+                    <div class="bg-gray-100 p-4 rounded-md mt-2">
+                        <p class="text-sm"><strong>Nama File:</strong> <span id="fileName"></span></p>
+                        <p class="text-sm"><strong>Tipe File:</strong> <span id="fileType"></span></p>
+                        <p class="text-sm"><strong>Jumlah Data:</strong> <span id="fileDataCount"></span></p>
+                        <p class="text-sm"><strong>Konten:</strong></p>
+                        <pre id="fileContent" class="overflow-auto max-h-48 p-2 bg-gray-200 rounded-md"></pre>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                @if ($errors->any())
+                    <div class="rounded bg-red-50 text-red-700 p-3 text-sm">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                <!-- Submit Button -->
+                <div class="flex space-x-4">
+                    <button type="submit"
+                        class="px-6 py-2 bg-primary text-white rounded hover:bg-indigo-700 transition">Analisis</button>
+                    <a href="{{ route('sentiments.history') }}"
+                        class="px-6 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">Lihat Riwayat</a>
+                </div>
+            </form>
+        </div>
     </div>
+@endsection
 
-    <!-- Script Preview File -->
-    @section('scripts')
+@push('scripts')
+    <!-- JS untuk Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
     <script>
-        document.getElementById('file').addEventListener('change', function () {
-            const fileName = this.files[0] ? this.files[0].name : 'Tidak ada file dipilih';
-            const preview = document.getElementById('file-preview');
-            if (preview) {
-                preview.textContent = fileName;
+        const sentimentData = {
+            labels: ['Positif', 'Netral', 'Negatif'],
+            datasets: [{
+                label: 'Jumlah Sentimen',
+                data: [
+                    {{ $sentimentCounts['positive'] }},
+                    {{ $sentimentCounts['neutral'] }},
+                    {{ $sentimentCounts['negative'] }}
+                ],
+                backgroundColor: ['#10B981', '#6366F1', '#EF4444'],
+                borderColor: ['#10B981', '#6366F1', '#EF4444'],
+                borderWidth: 1
+            }]
+        };
+
+        const timeSeriesData = {
+            labels: {!! json_encode($groupedSentiments->keys()) !!},
+            datasets: [{
+                    label: 'Positif',
+                    data: {!! json_encode($groupedSentiments->pluck('positive')->values()) !!},
+                    backgroundColor: '#10B981'
+                },
+                {
+                    label: 'Netral',
+                    data: {!! json_encode($groupedSentiments->pluck('neutral')->values()) !!},
+                    backgroundColor: '#6366F1'
+                },
+                {
+                    label: 'Negatif',
+                    data: {!! json_encode($groupedSentiments->pluck('negative')->values()) !!},
+                    backgroundColor: '#EF4444'
+                }
+            ]
+        };
+
+        let chartType = 'pie';
+        let currentChart = null;
+        const ctx = document.getElementById('sentimentChart').getContext('2d');
+
+        function renderChart(type) {
+            if (currentChart) currentChart.destroy();
+            // Buat ulang chart sesuai tipe
+            if (type === 'pie' || type === 'doughnut') {
+                currentChart = new Chart(ctx, {
+                    type: type,
+                    data: {
+                        labels: sentimentData.labels,
+                        datasets: [{
+                            label: 'Jumlah',
+                            data: sentimentData.data,
+                            backgroundColor: sentimentData.backgroundColor,
+                            hoverOffset: 10,
+                            cutout: type === 'doughnut' ? '70%' : 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: context => `${context.label}: ${context.raw} data`
+                                }
+                            }
+                        }
+                    }
+                });
+            } else if (type === 'bar') {
+                currentChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: sentimentData,
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            } else if (type === 'line') {
+                currentChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: timeSeriesData.labels,
+                        datasets: timeSeriesData.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    tooltipFormat: 'YYYY-MM-DD'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Tanggal'
+                                }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Jumlah'
+                                }
+                            }
+                        }
+                    }
+                });
             }
+        }
+
+        renderChart(chartType);
+
+        document.querySelectorAll('.chart-type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.chart-type-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-blue-100', 'text-blue-700');
+                    b.classList.add('bg-gray-100', 'text-gray-700');
+                });
+                btn.classList.add('active', 'bg-blue-100', 'text-blue-700');
+                btn.classList.remove('bg-gray-100', 'text-gray-700');
+                chartType = btn.dataset.type;
+                renderChart(chartType);
+            });
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            // Show preview section
+            document.getElementById('filePreview').classList.remove('hidden');
+
+            // Display file name and type
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileType').textContent = file.type;
+
+            // Read file content
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+
+                // Parse JSON if it's a JSON file
+                if (file.type === 'application/json') {
+                    try {
+                        const jsonData = JSON.parse(content);
+                        document.getElementById('fileContent').textContent = JSON.stringify(jsonData, null, 2);
+                        document.getElementById('fileDataCount').textContent = `Total Data: ${jsonData.length}`;
+                    } catch (error) {
+                        alert('File JSON tidak valid.');
+                        return;
+                    }
+                } else if (file.type === 'text/csv') {
+                    // For CSV, show raw content
+                    document.getElementById('fileContent').textContent = content;
+                    // Count lines in CSV
+                    const lines = content.split('\n').filter(line => line.trim() !== '');
+                    document.getElementById('fileDataCount').textContent = `Jumlah Baris: ${lines.length}`;
+                } else {
+                    alert('Tipe file tidak didukung.');
+                    return;
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('dateRange').addEventListener('change', function() {
+            const customRange = document.getElementById('customDateRange');
+            if (this.value === 'custom') customRange.classList.remove('hidden');
+            else customRange.classList.add('hidden');
         });
     </script>
-    @endsection
-
-@endsection
+@endpush

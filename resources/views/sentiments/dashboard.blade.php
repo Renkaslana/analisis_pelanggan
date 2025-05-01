@@ -1,176 +1,81 @@
-<!-- resources/views/sentiments/dashboard.blade.php -->
-@extends('layouts.app')
-@section('title', 'Dashboard')
+@extends('layouts.dashboard')
+
+@section('title', 'Dashboard - Sentimen Analysis')
+
 @section('content')
-    <div class="text-center mb-10">
-        <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">Dashboard Analisis Sentimen</h1>
-        <p class="text-white/80 max-w-2xl mx-auto">
-            Visualisasi data sentimen pelanggan
-        </p>
-    </div>
-    <div class="bg-white/20 backdrop-blur-md rounded-xl p-1 mb-8 inline-flex">
-        <a href="{{ route('sentiments.index') }}" class="px-4 py-2 rounded-lg {{ request()->routeIs('sentiments.index') ? 'bg-white text-blue-600 shadow-lg' : 'text-white' }} transition-all duration-300 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 12h12M8 8l-4 4 4 4"/>
-            </svg>
-            <span>Input Sentimen</span>
-        </a>
-        <a href="{{ route('sentiments.dashboard') }}" class="px-4 py-2 rounded-lg {{ request()->routeIs('sentiments.dashboard') ? 'bg-white text-blue-600 shadow-lg' : 'text-white' }} transition-all duration-300 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                <path d="M3 9h18"/>
-                <path d="M9 21V9"/>
-            </svg>
-            <span>Dashboard</span>
-        </a>
-        <a href="{{ route('sentiments.history') }}" class="px-4 py-2 rounded-lg {{ request()->routeIs('sentiments.history') ? 'bg-white text-blue-600 shadow-lg' : 'text-white' }} transition-all duration-300 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 3v18h18"/>
-                <path d="m19 9-5 5-4-4-3 3"/>
-            </svg>
-            <span>Riwayat Analisis</span>
-        </a>
-    </div>
-    <div class="grid md:grid-cols-2 gap-8">
-        <div class="glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
-            <div class="bg-gradient-to-r from-violet-500 to-purple-600 text-white p-6">
-                <h2 class="text-xl font-bold">Distribusi Sentimen</h2>
-                <p class="text-white/80">Perbandingan sentimen pelanggan</p>
-            </div>
-            <div class="p-6 h-80">
-                <canvas id="barChart"></canvas>
-            </div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h2 class="text-2xl font-bold text-dark mb-6">Ringkasan Analisis</h2>
+
+    <!-- Statistik -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-gray-500 text-sm uppercase tracking-wide">Positif</h3>
+            <p class="mt-2 text-3xl font-bold text-green-500">{{ $sentimentCounts['positive'] }}</p>
         </div>
-        <div class="glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
-            <div class="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white p-6">
-                <h2 class="text-xl font-bold">Proporsi Sentimen</h2>
-                <p class="text-white/80">Komposisi sentimen keseluruhan</p>
-            </div>
-            <div class="p-6 h-80">
-                <canvas id="pieChart"></canvas>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-gray-500 text-sm uppercase tracking-wide">Netral</h3>
+            <p class="mt-2 text-3xl font-bold text-blue-500">{{ $sentimentCounts['neutral'] }}</p>
         </div>
-        <div class="md:col-span-2 glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
-            <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
-                <h2 class="text-xl font-bold">Ringkasan Sentimen</h2>
-                <p class="text-white/80">Analisis kepuasan pelanggan</p>
-            </div>
-            <div class="p-6">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-green-500 rounded-lg text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                                    <line x1="9" x2="9.01" y1="9" y2="9"/>
-                                    <line x1="15" x2="15.01" y1="9" y2="9"/>
-                                </svg>
-                            </div>
-                            <h3 class="font-medium text-green-700">Positif</h3>
-                        </div>
-                        <p class="text-3xl font-bold text-green-600">{{ $sentimentCounts['positive'] }}</p>
-                        <p class="text-sm text-green-600/70 mt-1">
-                            {{ count($sentiments) > 0 ? round(($sentimentCounts['positive'] / count($sentiments)) * 100) : 0 }}% dari total
-                        </p>
-                    </div>
-                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-yellow-500 rounded-lg text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="8" x2="16" y1="12" y2="12"/>
-                                    <line x1="9" x2="9.01" y1="9" y2="9"/>
-                                    <line x1="15" x2="15.01" y1="9" y2="9"/>
-                                </svg>
-                            </div>
-                            <h3 class="font-medium text-yellow-700">Netral</h3>
-                        </div>
-                        <p class="text-3xl font-bold text-yellow-600">{{ $sentimentCounts['neutral'] }}</p>
-                        <p class="text-sm text-yellow-600/70 mt-1">
-                            {{ count($sentiments) > 0 ? round(($sentimentCounts['neutral'] / count($sentiments)) * 100) : 0 }}% dari total
-                        </p>
-                    </div>
-                    <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-sm border border-red-200">
-                        <div class="flex items-center gap-3 mb-3">
-                            <div class="p-2 bg-red-500 rounded-lg text-white">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"/>
-                                    <line x1="8" x2="16" y1="15" y2="15"/>
-                                    <line x1="9" x2="9.01" y1="9" y2="9"/>
-                                    <line x1="15" x2="15.01" y1="9" y2="9"/>
-                                </svg>
-                            </div>
-                            <h3 class="font-medium text-red-700">Negatif</h3>
-                        </div>
-                        <p class="text-3xl font-bold text-red-600">{{ $sentimentCounts['negative'] }}</p>
-                        <p class="text-sm text-red-600/70 mt-1">
-                            {{ count($sentiments) > 0 ? round(($sentimentCounts['negative'] / count($sentiments)) * 100) : 0 }}% dari total
-                        </p>
-                    </div>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+            <h3 class="text-gray-500 text-sm uppercase tracking-wide">Negatif</h3>
+            <p class="mt-2 text-3xl font-bold text-red-500">{{ $sentimentCounts['negative'] }}</p>
         </div>
     </div>
+
+    <!-- Tabel Riwayat -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="font-semibold text-lg text-dark">Riwayat Terbaru</h3>
+            <a href="{{ route('sentiments.history') }}" class="text-primary hover:underline">Lihat Semua</a>
+        </div>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teks</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sentimen</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Probabilitas</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse ($sentiments as $item)
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm truncate max-w-xs" title="{{ $item->text }}">
+                        {{ Str::limit($item->text, 50) }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="
+                            inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                            @if($item->sentiment == 'positive') bg-green-100 text-green-800
+                            @elseif($item->sentiment == 'negative') bg-red-100 text-red-800
+                            @else bg-blue-100 text-blue-800
+                            @endif">
+                            {{ ucfirst($item->sentiment) }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ number_format($item->probability * 100, 2) }}%
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y H:i') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm space-x-2">
+                        <a href="{{ route('sentiments.edit', $item->id) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
+                        <form action="{{ route('sentiments.destroy', $item->id) }}" method="POST" class="inline-block">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Yakin hapus?')">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada data analisis.</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 @endsection
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Bar Chart
-        const barCtx = document.getElementById('barChart').getContext('2d');
-        const barChart = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Positif', 'Netral', 'Negatif'],
-                datasets: [{
-                    label: 'Jumlah Ulasan',
-                    data: [{{ $sentimentCounts['positive'] }}, {{ $sentimentCounts['neutral'] }}, {{ $sentimentCounts['negative'] }}],
-                    backgroundColor: [
-                        '#22c55e', // green-500
-                        '#eab308', // yellow-500
-                        '#ef4444', // red-500
-                    ],
-                    borderRadius: 4,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                }
-            }
-        });
-        // Pie Chart
-        const pieCtx = document.getElementById('pieChart').getContext('2d');
-        const pieChart = new Chart(pieCtx, {
-            type: 'pie',
-            data: {
-                labels: ['Positif', 'Netral', 'Negatif'],
-                datasets: [{
-                    data: [{{ $sentimentCounts['positive'] }}, {{ $sentimentCounts['neutral'] }}, {{ $sentimentCounts['negative'] }}],
-                    backgroundColor: [
-                        '#22c55e', // green-500
-                        '#eab308', // yellow-500
-                        '#ef4444', // red-500
-                    ],
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                    }
-                }
-            }
-        });
-    });
-</script>
-@endpush

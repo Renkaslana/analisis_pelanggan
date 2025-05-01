@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SentimentController;
+use App\Http\Controllers\HomepageController;
 use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
@@ -10,9 +11,12 @@ Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLog
 Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login']);
 Route::post('/logout', [App\Http\Controllers\Auth\LogoutController::class, 'logout'])->name('logout');
 
+// Guest Accessible Route
+Route::get('/', [HomepageController::class, 'home'])->name('home'); // Halaman utama yang bisa diakses guest
+
 // Protected Routes
 Route::middleware(['auth'])->group(function () {
-    Route::get('/', [SentimentController::class, 'index'])->name('sentiments.index');
+    Route::get('/app', [SentimentController::class, 'index'])->name('sentiments.index');
     Route::post('/analyze', [SentimentController::class, 'analyze'])->name('sentiments.analyze');
     Route::get('/dashboard', [SentimentController::class, 'dashboard'])->name('sentiments.dashboard');
     Route::get('/history', [SentimentController::class, 'history'])->name('sentiments.history');
