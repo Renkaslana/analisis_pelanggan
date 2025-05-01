@@ -1,8 +1,6 @@
 <!-- resources/views/sentiments/dashboard.blade.php -->
 @extends('layouts.app')
-
 @section('title', 'Dashboard')
-
 @section('content')
     <div class="text-center mb-10">
         <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">Dashboard Analisis Sentimen</h1>
@@ -10,7 +8,6 @@
             Visualisasi data sentimen pelanggan
         </p>
     </div>
-
     <div class="bg-white/20 backdrop-blur-md rounded-xl p-1 mb-8 inline-flex">
         <a href="{{ route('sentiments.index') }}" class="px-4 py-2 rounded-lg {{ request()->routeIs('sentiments.index') ? 'bg-white text-blue-600 shadow-lg' : 'text-white' }} transition-all duration-300 flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -34,7 +31,6 @@
             <span>Riwayat Analisis</span>
         </a>
     </div>
-
     <div class="grid md:grid-cols-2 gap-8">
         <div class="glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
             <div class="bg-gradient-to-r from-violet-500 to-purple-600 text-white p-6">
@@ -45,7 +41,6 @@
                 <canvas id="barChart"></canvas>
             </div>
         </div>
-
         <div class="glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
             <div class="bg-gradient-to-r from-fuchsia-500 to-pink-600 text-white p-6">
                 <h2 class="text-xl font-bold">Proporsi Sentimen</h2>
@@ -55,14 +50,13 @@
                 <canvas id="pieChart"></canvas>
             </div>
         </div>
-
         <div class="md:col-span-2 glass-card card-hover rounded-xl overflow-hidden border-none shadow-xl">
             <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
                 <h2 class="text-xl font-bold">Ringkasan Sentimen</h2>
                 <p class="text-white/80">Analisis kepuasan pelanggan</p>
             </div>
             <div class="p-6">
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-sm border border-green-200">
                         <div class="flex items-center gap-3 mb-3">
                             <div class="p-2 bg-green-500 rounded-lg text-white">
@@ -80,7 +74,6 @@
                             {{ count($sentiments) > 0 ? round(($sentimentCounts['positive'] / count($sentiments)) * 100) : 0 }}% dari total
                         </p>
                     </div>
-
                     <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-sm border border-yellow-200">
                         <div class="flex items-center gap-3 mb-3">
                             <div class="p-2 bg-yellow-500 rounded-lg text-white">
@@ -98,7 +91,6 @@
                             {{ count($sentiments) > 0 ? round(($sentimentCounts['neutral'] / count($sentiments)) * 100) : 0 }}% dari total
                         </p>
                     </div>
-
                     <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl shadow-sm border border-red-200">
                         <div class="flex items-center gap-3 mb-3">
                             <div class="p-2 bg-red-500 rounded-lg text-white">
@@ -121,7 +113,6 @@
         </div>
     </div>
 @endsection
-
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -155,7 +146,6 @@
                 }
             }
         });
-
         // Pie Chart
         const pieCtx = document.getElementById('pieChart').getContext('2d');
         const pieChart = new Chart(pieCtx, {
